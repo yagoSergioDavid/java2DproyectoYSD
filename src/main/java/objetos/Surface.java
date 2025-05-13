@@ -21,6 +21,11 @@ public class Surface extends Canvas {
 	private final int MAX_INTENTOS = 5;
 	private long ultimoReinicioIntentos = System.currentTimeMillis();
 	private final long TIEMPO_REINICIO = 60000; // 60 segundos
+	private boolean gameOver = false;
+	
+	private int puntos=0;
+	
+	private Jugador jugador = new Jugador();
 
 	
 	public Surface(int w, int h) {
@@ -31,18 +36,35 @@ public class Surface extends Canvas {
 	        @Override
 	        public void keyPressed(java.awt.event.KeyEvent e) {
 	            if (e.getKeyCode() == java.awt.event.KeyEvent.VK_SPACE) {
-	                if (intentosDisponibles > 0 && !balls.isEmpty()) {
+	                if (!gameOver && intentosDisponibles > 0 && !balls.isEmpty()) {
 	                    balls.get(0).tryDeactivate();
 	                    intentosDisponibles--;
 	                    System.out.println("Intentos restantes: " + intentosDisponibles);
-	                } else {
+	                } else if (!gameOver) {
 	                    System.out.println("¡Sin intentos disponibles!");
 	                }
 	            }
+
+	            if (e.getKeyCode() == java.awt.event.KeyEvent.VK_R && gameOver) {
+	                reiniciarJuego();
+	            }
+	        }
+	    });
+	    
+	    addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+	        @Override
+	        public void mouseMoved(java.awt.event.MouseEvent e) {
+	            jugador.setPosition(e.getX(), e.getY());
+	        }
+
+	        @Override
+	        public void mouseDragged(java.awt.event.MouseEvent e) {
+	            jugador.setPosition(e.getX(), e.getY());
 	        }
 	    });
 
 
+	    
 	    setFocusable(true); // IMPORTANTE para que reciba eventos de teclado
 	    requestFocusInWindow(); // intenta capturar el foco desde el principio
 	}
@@ -50,7 +72,7 @@ public class Surface extends Canvas {
 
 	private void run() {
 		balls.add(new Ball(this)); // Añadir la primera bola
-		createBufferStrategy(2);
+		
 		bufferStrategy = getBufferStrategy();
 		
 		long t0 = System.nanoTime(), t1;
@@ -91,12 +113,20 @@ public class Surface extends Canvas {
 		
 		
 	}
+	
+	public void incrementarPuntos() {
+	    puntos++;
+	}
 
 
 	public void start() {
-		t = new Thread(this::run);
-		t.start();
+	    createBufferStrategy(4); // Mueve esto aquí (solo una vez)
+	    bufferStrategy = getBufferStrategy();
+	    
+	    t = new Thread(this::run);
+	    t.start();
 	}
+
 
 	public void stop() {
 		t.interrupt();
@@ -122,12 +152,21 @@ public class Surface extends Canvas {
 	}
 
 	private void next(long lapse) {
+		if(gameOver) return;
 	    ArrayList<Ball> toRemove = new ArrayList<>();
 	    for (Ball ball : balls) {
 	        ball.move(lapse);
 	        ball.updateColor();
 	        if (!ball.isActive()) {
 	            toRemove.add(ball);
+	            continue;
+	        }
+	        
+	     // Si colisiona con el jugador, termina el juego o penaliza
+	        if (jugador.colisionaCon(ball)) {
+	            System.out.println("¡Colisión!");
+	            gameOver = true;
+	            return; // sal del bucle
 	        }
 	    }
 	    balls.removeAll(toRemove);
@@ -158,6 +197,37 @@ public class Surface extends Canvas {
 		for (Ball b: balls) {
 			b.paint(g2d);
 		}
+		//Espacios restantes por pantalla
+		g2d.setColor(Color.WHITE);
+		g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 16));
+		g2d.drawString("Intentos restantes: " + intentosDisponibles, 10, 20);
+		//Puntos por pantalla
+		g2d.setColor(Color.YELLOW);
+		g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
+		g2d.drawString("Puntos: " + puntos, 10, 40);
+		
+		jugador.paint(g2d);
+		
+		if (gameOver) {
+		    g2d.setColor(Color.RED);
+		    g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 36));
+		    g2d.drawString("¡GAME OVER!", getWidth() / 2 - 120, getHeight() / 2);
+		    g2d.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 20));
+		    g2d.drawString("Pulsa 'R' para reiniciar", getWidth() / 2 - 100, getHeight() / 2 + 30);
+		}
 	}
+	
+	private void reiniciarJuego() {
+	    System.out.println("Reiniciando juego...");
+	    balls.clear();
+	    balls.add(new Ball(this));
+	    puntos = 0;
+	    intentosDisponibles = MAX_INTENTOS;
+	    ultimoReinicioIntentos = System.currentTimeMillis();
+	    gameOver = false;
+	    start(); // vuelve a lanzar el hilo
+	    
+	}
+
 }
 

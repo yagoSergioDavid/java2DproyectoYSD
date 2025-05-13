@@ -109,6 +109,7 @@ public class Ball {
 	    }
 
 	    if (bounced) {
+	    	surface.incrementarPuntos();
 	        bounceCount++;
 	        if (bounceCount >= 2) {
 	            // Calcula velocidad actual
@@ -123,7 +124,21 @@ public class Ball {
 	            bounceCount = 0;
 	        }
 	    }
+	    
 	}
+	
+	public double getX() {
+	    return x;
+	}
+
+	public double getY() {
+	    return y;
+	}
+
+	public int getSize() {
+	    return size;
+	}
+
 
 
 }

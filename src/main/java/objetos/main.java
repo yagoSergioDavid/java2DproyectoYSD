@@ -1,5 +1,7 @@
 package objetos;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.WindowAdapter;
 
 import javax.swing.JFrame;
@@ -12,18 +14,31 @@ public class main extends WindowAdapter {
 	private final Surface surface;
 
 	public main() {
-	frame = new JFrame("Bola Rebotando");
+	frame = new JFrame();
+	surface= new Surface(1920, 1080);
+	
+	frame.setUndecorated(true);
+	
 	frame.setDefaultCloseOperation(JFrame.
-	DO_NOTHING_ON_CLOSE);
-	frame.addWindowListener(this);
-	frame.add(surface = new Surface(650, 450));
-	frame.pack();
-		frame.setLocationRelativeTo(null);
-	}
+	EXIT_ON_CLOSE);
+	
+	frame.add(surface);
+	
+	GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+    if (gd.isFullScreenSupported()) {
+        gd.setFullScreenWindow(frame); 
+    } else {
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setVisible(true);
+    }
+
+    surface.start();
+}
+	
 
 	public void iniciar() {
 		frame.setVisible(true);
-		surface.createBufferStrategy(2);
+		surface.createBufferStrategy(3);
 		surface.start();
 	}
 
