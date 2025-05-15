@@ -11,37 +11,39 @@ public class Ball {
 	private double vx;
 	private double vy;
 	private Color color;
-	private int bounceCount =0;
+	private int bounceCount = 0;
 	private static final double MAX_SPEED = 600; // límite razonable
 	private long lastWhiteStart = System.currentTimeMillis();
-	private static final long WHITE_INTERVAL = 5000; // cada 3 segundos cambia a blanco
-	private static final long WHITE_DURATION = 300; // está blanca durante 300 ms
+	private static long WHITE_INTERVAL = getRandomTime(); // cambia a blanco en un intervalo aleatorio (3-6s)
+	private static final long WHITE_DURATION = 420; // está blanca durante 420 ms
 	private boolean isWhite = false;
 	private boolean active = true;
 
-	
 	public Ball(Surface surface) {
-	    this.surface = surface;
+		this.surface = surface;
 
-	    // Tamaño fijo
-	    size = 50;
+		// Tamaño fijo
+		size = 50;
 
-	    // Posición centrada
-	    x = (surface.getWidth() - size) / 2;
-	    y = (surface.getHeight() - size) / 2;
+		// Posición centrada
+		x = (surface.getWidth() - size) / 2;
+		y = (surface.getHeight() - size) / 2;
 
-	    // Dirección aleatoria
-	    double speed = 200;
-	    double direction = Math.random() * 2 * Math.PI; // dirección aleatoria en radianes
-	    vx = Math.cos(direction) * speed;
-	    vy = Math.sin(direction) * speed;
+		// Dirección aleatoria
+		double speed = 200;
+		double direction = Math.random() * 2 * Math.PI; // dirección aleatoria en radianes
+		vx = Math.cos(direction) * speed;
+		vy = Math.sin(direction) * speed;
 
-	    // Color fijo
-	    color = new Color(1.0f, 0.0f, 0.0f, 1.0f);
+		// Color fijo
+		color = new Color(1.0f, 0.0f, 0.0f, 1.0f);
 	}
 
+	private static long getRandomTime() {
+		// TODO Auto-generated method stub
+		return 3000 + (long) (Math.random() * 3000);
+	}
 
-	
 	public Ball(Surface surface, double x, double y, int size, double direction, double speed, Color color) {
 		this.x = x;
 		this.y = y;
@@ -56,89 +58,86 @@ public class Ball {
 		g.setColor(color);
 		g.fillOval((int) x, (int) y, (int) size, size);
 	}
-	
+
 	public void updateColor() {
-	    long now = System.currentTimeMillis();
+		long now = System.currentTimeMillis();
 
-	    if (!isWhite && now - lastWhiteStart >= WHITE_INTERVAL) {
-	        isWhite = true;
-	        color = Color.WHITE;
-	        lastWhiteStart = now; // marca el comienzo del blanco
-	    } else if (isWhite && now - lastWhiteStart >= WHITE_DURATION) {
-	        isWhite = false;
-	        color = new Color(1.0f, 0.0f, 0.0f); // rojo de nuevo
-	    }
+		if (!isWhite && now - lastWhiteStart >= WHITE_INTERVAL) {
+			isWhite = true;
+			color = Color.WHITE;
+			lastWhiteStart = now; // marca el comienzo del blanco
+		} else if (isWhite && now - lastWhiteStart >= WHITE_DURATION) {
+			isWhite = false;
+			color = new Color(1.0f, 0.0f, 0.0f); // rojo de nuevo
+			WHITE_INTERVAL = getRandomTime();
+		}
 	}
-	
+
 	public void tryDeactivate() {
-	    if (isWhite) {
-	        active = false;
-	    }
-	}
-	
-	public boolean isActive() {
-	    return active;
+		if (isWhite) {
+			active = false;
+		}
 	}
 
-	
+	public boolean isActive() {
+		return active;
+	}
 
 	public void move(long lapse) {
-	    x += (lapse * vx) / 1_000_000_000L;
-	    y += (lapse * vy) / 1_000_000_000L;
+		x += (lapse * vx) / 1_000_000_000L;
+		y += (lapse * vy) / 1_000_000_000L;
 
-	    boolean bounced = false;
+		boolean bounced = false;
 
-	    if (x + size >= surface.getWidth()) {
-	        x = 2 * surface.getWidth() - x - 2 * size;
-	        vx *= -1;
-	        bounced = true;
-	    } else if (x < 0) {
-	        x = -x;
-	        vx *= -1;
-	        bounced = true;
-	    }
+		if (x + size >= surface.getWidth()) {
+			x = 2 * surface.getWidth() - x - 2 * size;
+			vx *= -1;
+			bounced = true;
+		} else if (x < 0) {
+			x = -x;
+			vx *= -1;
+			bounced = true;
+		}
 
-	    if (y + size >= surface.getHeight()) {
-	        y = 2 * surface.getHeight() - y - 2 * size;
-	        vy *= -1;
-	        bounced = true;
-	    } else if (y < 0) {
-	        y = -y;
-	        vy *= -1;
-	        bounced = true;
-	    }
+		if (y + size >= surface.getHeight()) {
+			y = 2 * surface.getHeight() - y - 2 * size;
+			vy *= -1;
+			bounced = true;
+		} else if (y < 0) {
+			y = -y;
+			vy *= -1;
+			bounced = true;
+		}
 
-	    if (bounced) {
-	    	surface.incrementarPuntos();
-	        bounceCount++;
-	        if (bounceCount >= 2) {
-	            // Calcula velocidad actual
-	            double speed = Math.sqrt(vx * vx + vy * vy);
+		if (bounced) {
+			surface.incrementarPuntos();
+			bounceCount++;
+			if (bounceCount >= 2) {
+				// Calcula velocidad actual
+				double speed = Math.sqrt(vx * vx + vy * vy);
 
-	            if (speed < MAX_SPEED) {
-	                // Aumenta un 10% solo si no supera el máximo
-	                vx *= 1.1;
-	                vy *= 1.1;
-	            }
+				if (speed < MAX_SPEED) {
+					// Aumenta un 10% solo si no supera el máximo
+					vx *= 1.1;
+					vy *= 1.1;
+				}
 
-	            bounceCount = 0;
-	        }
-	    }
-	    
+				bounceCount = 0;
+			}
+		}
+
 	}
-	
+
 	public double getX() {
-	    return x;
+		return x;
 	}
 
 	public double getY() {
-	    return y;
+		return y;
 	}
 
 	public int getSize() {
-	    return size;
+		return size;
 	}
-
-
 
 }

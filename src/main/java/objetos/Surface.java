@@ -2,12 +2,15 @@ package objetos;
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 public class Surface extends Canvas {
@@ -16,68 +19,75 @@ public class Surface extends Canvas {
 	private boolean paused;
 	private ArrayList<Ball> balls = new ArrayList<>();
 	private BufferStrategy bufferStrategy;
-	
+
 	private int intentosDisponibles = 5;
 	private final int MAX_INTENTOS = 5;
 	private long ultimoReinicioIntentos = System.currentTimeMillis();
 	private final long TIEMPO_REINICIO = 60000; // 60 segundos
 	private boolean gameOver = false;
-	
-	private int puntos=0;
-	
+
+	private int puntos = 0;
+	private int ultimoMultiploPuntos = 0;
+
+	private Image fondo;
+
 	private Jugador jugador = new Jugador();
 
-	
 	public Surface(int w, int h) {
-	    setPreferredSize(new Dimension(w, h));
-	    setBackground(Color.BLACK);
+		setPreferredSize(new Dimension(w, h));
+		setBackground(Color.BLACK);
+		fondo = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/objetos/fondo.png"));
 
-	    addKeyListener(new java.awt.event.KeyAdapter() {
-	        @Override
-	        public void keyPressed(java.awt.event.KeyEvent e) {
-	            if (e.getKeyCode() == java.awt.event.KeyEvent.VK_SPACE) {
-	                if (!gameOver && intentosDisponibles > 0 && !balls.isEmpty()) {
-	                    balls.get(0).tryDeactivate();
-	                    intentosDisponibles--;
-	                    System.out.println("Intentos restantes: " + intentosDisponibles);
-	                } else if (!gameOver) {
-	                    System.out.println("¡Sin intentos disponibles!");
-	                }
-	            }
+		addKeyListener(new java.awt.event.KeyAdapter() {
+			@Override
+			public void keyPressed(java.awt.event.KeyEvent e) {
+				if (e.getKeyCode() == java.awt.event.KeyEvent.VK_SPACE) {
+					if (!gameOver && intentosDisponibles > 0 && !balls.isEmpty()) {
+						balls.get(0).tryDeactivate();
+						intentosDisponibles--;
+						System.out.println("Intentos restantes: " + intentosDisponibles);
+					} else if (!gameOver) {
+						System.out.println("¡Sin intentos disponibles!");
+					}
+				}
 
-	            if (e.getKeyCode() == java.awt.event.KeyEvent.VK_R && gameOver) {
-	                reiniciarJuego();
-	            }
-	        }
-	    });
-	    
-	    addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-	        @Override
-	        public void mouseMoved(java.awt.event.MouseEvent e) {
-	            jugador.setPosition(e.getX(), e.getY());
-	        }
+				if (e.getKeyCode() == java.awt.event.KeyEvent.VK_R && gameOver) {
+					reiniciarJuego();
+				}
+			}
+		});
 
-	        @Override
-	        public void mouseDragged(java.awt.event.MouseEvent e) {
-	            jugador.setPosition(e.getX(), e.getY());
-	        }
-	    });
+		addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+			@Override
+			public void mouseMoved(java.awt.event.MouseEvent e) {
+				jugador.setPosition(e.getX(), e.getY());
+			}
 
+			@Override
+			public void mouseDragged(java.awt.event.MouseEvent e) {
+				jugador.setPosition(e.getX(), e.getY());
+			}
+		});
 
-	    
-	    setFocusable(true); // IMPORTANTE para que reciba eventos de teclado
-	    requestFocusInWindow(); // intenta capturar el foco desde el principio
+		setFocusable(true); // IMPORTANTE para que reciba eventos de teclado
+		requestFocusInWindow(); // intenta capturar el foco desde el principio
+
+		// Creamos una imagen transparente pera meterlo como cursor
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB); // Imagen vacía
+		Cursor invisibleCursor = toolkit.createCustomCursor(cursorImg, new java.awt.Point(0, 0), "InvisibleCursor");
+		setCursor(invisibleCursor);
+
 	}
-
 
 	private void run() {
 		balls.add(new Ball(this)); // Añadir la primera bola
-		
+
 		bufferStrategy = getBufferStrategy();
-		
+
 		long t0 = System.nanoTime(), t1;
 		long lastBallTime = System.currentTimeMillis(); // tiempo en milisegundos
-		
+
 		while (!Thread.currentThread().isInterrupted()) {
 			synchronized (this) {
 				if (paused) {
@@ -89,15 +99,15 @@ public class Surface extends Canvas {
 					t0 = System.nanoTime();
 				}
 			}
-
+			
 			// Comprobar si han pasado 5 segundos
 			long currentTime = System.currentTimeMillis();
 			if (currentTime - ultimoReinicioIntentos >= TIEMPO_REINICIO) {
-			    intentosDisponibles = MAX_INTENTOS;
-			    ultimoReinicioIntentos = currentTime;
-			    System.out.println("Intentos restaurados.");
+				intentosDisponibles = MAX_INTENTOS;
+				ultimoReinicioIntentos = currentTime;
+				System.out.println("Intentos restaurados.");
 			}
-			if (currentTime - lastBallTime >= 5000) {
+			if (currentTime - lastBallTime >= 5000 && !gameOver) {
 				balls.add(new Ball(this)); // añadir nueva bola
 				lastBallTime = currentTime; // reiniciar temporizador
 			}
@@ -106,25 +116,46 @@ public class Surface extends Canvas {
 			drawFrame();
 			t0 = t1;
 		}
-		
-		
-		
-		
-		
-		
+
 	}
-	
+
 	public void incrementarPuntos() {
-	    puntos++;
+		puntos++;
+
+		if (puntos >= ultimoMultiploPuntos + 50) { // cada 50 ptos se suma un intento mas
+			if (intentosDisponibles < MAX_INTENTOS) {
+				intentosDisponibles++;
+				System.out.println("¡Intento extra por 50 puntos!");
+			}
+			ultimoMultiploPuntos += 50;
+		}
 	}
 
 
 	public void start() {
-	    createBufferStrategy(4); // Mueve esto aquí (solo una vez)
-	    bufferStrategy = getBufferStrategy();
-	    
-	    t = new Thread(this::run);
-	    t.start();
+		// Asegúrate de que el canvas esté en pantalla antes de crear el buffer
+		if (!isDisplayable()) {
+			createBufferStrategy(2);
+		} else {
+			// Espera hasta que el Canvas esté listo
+			createBufferStrategySafely1();
+		}
+
+		bufferStrategy = getBufferStrategy();
+
+		t = new Thread(this::run);
+		t.start();
+	}
+
+	private void createBufferStrategySafely1() {
+		while (!isDisplayable()) {
+			try {
+				Thread.sleep(10); // espera un poco
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+		createBufferStrategy(4);
 	}
 
 
@@ -152,26 +183,26 @@ public class Surface extends Canvas {
 	}
 
 	private void next(long lapse) {
-		if(gameOver) return;
-	    ArrayList<Ball> toRemove = new ArrayList<>();
-	    for (Ball ball : balls) {
-	        ball.move(lapse);
-	        ball.updateColor();
-	        if (!ball.isActive()) {
-	            toRemove.add(ball);
-	            continue;
-	        }
-	        
-	     // Si colisiona con el jugador, termina el juego o penaliza
-	        if (jugador.colisionaCon(ball)) {
-	            System.out.println("¡Colisión!");
-	            gameOver = true;
-	            return; // sal del bucle
-	        }
-	    }
-	    balls.removeAll(toRemove);
-	}
+		if (gameOver)
+			return;
+		ArrayList<Ball> toRemove = new ArrayList<>();
+		for (Ball ball : balls) {
+			ball.move(lapse);
+			ball.updateColor();
+			if (!ball.isActive()) {
+				toRemove.add(ball);
+				continue;
+			}
 
+			// Si colisiona con el jugador, termina el juego o penaliza
+			if (jugador.colisionaCon(ball)) {
+				System.out.println("¡Colisión!");
+				gameOver = true;
+				return; // sal del bucle
+			}
+		}
+		balls.removeAll(toRemove);
+	}
 
 	private void drawFrame() {
 		Graphics2D g = null;
@@ -191,43 +222,48 @@ public class Surface extends Canvas {
 	@Override
 	public void paint(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
-		g2d.setColor(getBackground());
-		g2d.fillRect(0, 0, getWidth(), getHeight());
+
+		if (fondo != null) {
+			g2d.drawImage(fondo, 0, 0, getWidth(), getHeight(), this);
+		} else {
+			g2d.setColor(getBackground());
+			g2d.fillRect(0, 0, getWidth(), getHeight());
+		}
+
 //		balls.forEach(ball -> ball.paint(g2d));
-		for (Ball b: balls) {
+		for (Ball b : balls) {
 			b.paint(g2d);
 		}
-		//Espacios restantes por pantalla
+		// Espacios restantes por pantalla
 		g2d.setColor(Color.WHITE);
 		g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 16));
 		g2d.drawString("Intentos restantes: " + intentosDisponibles, 10, 20);
-		//Puntos por pantalla
+		// Puntos por pantalla
 		g2d.setColor(Color.YELLOW);
 		g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
 		g2d.drawString("Puntos: " + puntos, 10, 40);
-		
+
 		jugador.paint(g2d);
-		
+
 		if (gameOver) {
-		    g2d.setColor(Color.RED);
-		    g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 36));
-		    g2d.drawString("¡GAME OVER!", getWidth() / 2 - 120, getHeight() / 2);
-		    g2d.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 20));
-		    g2d.drawString("Pulsa 'R' para reiniciar", getWidth() / 2 - 100, getHeight() / 2 + 30);
+			g2d.setColor(Color.RED);
+			g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 36));
+			g2d.drawString("¡GAME OVER!", getWidth() / 2 - 120, getHeight() / 2);
+			g2d.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 20));
+			g2d.drawString("Pulsa 'R' para reiniciar", getWidth() / 2 - 100, getHeight() / 2 + 30);
 		}
 	}
-	
+
 	private void reiniciarJuego() {
-	    System.out.println("Reiniciando juego...");
-	    balls.clear();
-	    balls.add(new Ball(this));
-	    puntos = 0;
-	    intentosDisponibles = MAX_INTENTOS;
-	    ultimoReinicioIntentos = System.currentTimeMillis();
-	    gameOver = false;
-	    start(); // vuelve a lanzar el hilo
-	    
+		System.out.println("Reiniciando juego...");
+		balls.clear();
+		balls.add(new Ball(this));
+		puntos = 0;
+		intentosDisponibles = MAX_INTENTOS;
+		ultimoReinicioIntentos = System.currentTimeMillis();
+		gameOver = false;
+		start(); // vuelve a lanzar el hilo
+
 	}
 
 }
-
