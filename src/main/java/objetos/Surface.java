@@ -13,6 +13,8 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import menu.menuPrincipal;
+
 public class Surface extends Canvas {
 	private static final long serialVersionUID = 1L;
 	private Thread t;
@@ -54,8 +56,13 @@ public class Surface extends Canvas {
 				if (e.getKeyCode() == java.awt.event.KeyEvent.VK_R && gameOver) {
 					reiniciarJuego();
 				}
+
+				if (e.getKeyCode() == java.awt.event.KeyEvent.VK_M && gameOver) {
+					volverAlMenu();
+				}
 			}
 		});
+
 
 		addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
 			@Override
@@ -79,45 +86,62 @@ public class Surface extends Canvas {
 		setCursor(invisibleCursor);
 
 	}
+	
+	private void volverAlMenu() {
+		System.out.println("Volviendo al menú...");
+		new menuPrincipal();
+		java.awt.Window window = javax.swing.SwingUtilities.getWindowAncestor(this);
+		if (window != null) {
+			window.dispose(); // Cierra la ventana actual del juego
+		}
+		
+	}
+
 
 	private void run() {
-		balls.add(new Ball(this)); // Añadir la primera bola
+	    bufferStrategy = getBufferStrategy();
 
-		bufferStrategy = getBufferStrategy();
+	    long t0 = System.nanoTime(), t1;
+	    long lastBallTime = 0;
+	    long firstBallTime = System.currentTimeMillis() + 3000; // Espera 3 segundos antes de la primera bola
 
-		long t0 = System.nanoTime(), t1;
-		long lastBallTime = System.currentTimeMillis(); // tiempo en milisegundos
+	    while (!Thread.currentThread().isInterrupted()) {
+	        synchronized (this) {
+	            if (paused) {
+	                try {
+	                    wait();
+	                } catch (InterruptedException e) {
+	                    Thread.currentThread().interrupt();
+	                }
+	                t0 = System.nanoTime();
+	            }
+	        }
 
-		while (!Thread.currentThread().isInterrupted()) {
-			synchronized (this) {
-				if (paused) {
-					try {
-						wait();
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-					}
-					t0 = System.nanoTime();
-				}
-			}
-			
-			// Comprobar si han pasado 5 segundos
-			long currentTime = System.currentTimeMillis();
-			if (currentTime - ultimoReinicioIntentos >= TIEMPO_REINICIO) {
-				intentosDisponibles = MAX_INTENTOS;
-				ultimoReinicioIntentos = currentTime;
-				System.out.println("Intentos restaurados.");
-			}
-			if (currentTime - lastBallTime >= 5000 && !gameOver) {
-				balls.add(new Ball(this)); // añadir nueva bola
-				lastBallTime = currentTime; // reiniciar temporizador
-			}
+	        long currentTime = System.currentTimeMillis();
 
-			next((t1 = System.nanoTime()) - t0);
-			drawFrame();
-			t0 = t1;
-		}
+	        if (currentTime - ultimoReinicioIntentos >= TIEMPO_REINICIO) {
+	            intentosDisponibles = MAX_INTENTOS;
+	            ultimoReinicioIntentos = currentTime;
+	            System.out.println("Intentos restaurados.");
+	        }
 
+	        if (currentTime >= firstBallTime && !gameOver) {
+	            balls.add(new Ball(this));
+	            lastBallTime = currentTime;
+	            firstBallTime = Long.MAX_VALUE; // primera bola ya creada
+	        }
+
+	        if (currentTime - lastBallTime >= 5000 && !gameOver && firstBallTime == Long.MAX_VALUE) {
+	            balls.add(new Ball(this));
+	            lastBallTime = currentTime;
+	        }
+
+	        next((t1 = System.nanoTime()) - t0);
+	        drawFrame();
+	        t0 = t1;
+	    }
 	}
+
 
 	public void incrementarPuntos() {
 		puntos++;
@@ -251,6 +275,7 @@ public class Surface extends Canvas {
 			g2d.drawString("¡GAME OVER!", getWidth() / 2 - 120, getHeight() / 2);
 			g2d.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 20));
 			g2d.drawString("Pulsa 'R' para reiniciar", getWidth() / 2 - 100, getHeight() / 2 + 30);
+			g2d.drawString("Pulsa 'M' para volver al menu", getWidth() / 2 - 120, getHeight() / 2 + 60);
 		}
 	}
 
