@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 
 public class Jugador {
 	private int x, y;
-	private final int size = 50; // Escala deseada
+	private final int size = 70; // Escala deseada
 	private Image cactusImage;
 
 	public Jugador() {

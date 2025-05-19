@@ -159,7 +159,7 @@ public class Surface extends Canvas {
 	public void start() {
 		// Asegúrate de que el canvas esté en pantalla antes de crear el buffer
 		if (!isDisplayable()) {
-			createBufferStrategy(2);
+			createBufferStrategy(4);
 		} else {
 			// Espera hasta que el Canvas esté listo
 			createBufferStrategySafely1();
