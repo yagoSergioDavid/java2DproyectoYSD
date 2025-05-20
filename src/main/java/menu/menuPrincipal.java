@@ -66,7 +66,8 @@ public class menuPrincipal extends JFrame {
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
             int anchoPantalla = gd.getDisplayMode().getWidth();
             int altoPantalla = gd.getDisplayMode().getHeight();
-            Surface juego = new Surface(anchoPantalla, altoPantalla);
+            
+            Surface juego = new Surface(anchoPantalla, altoPantalla, ventanaJuego); // se pasa el JFrame aquí
 
             ventanaJuego.add(juego);
             ventanaJuego.pack();
@@ -81,6 +82,7 @@ public class menuPrincipal extends JFrame {
             juego.start();
             dispose(); // cerrar menú
         });
+
 
         btnInstrucciones.addActionListener(e -> {
             JOptionPane.showMessageDialog(this,

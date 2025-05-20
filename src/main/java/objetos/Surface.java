@@ -13,7 +13,12 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
+import gestsor.Ranking;
 import menu.menuPrincipal;
+import menu.ventanaFinal;
 
 public class Surface extends Canvas {
 	private static final long serialVersionUID = 1L;
@@ -32,10 +37,13 @@ public class Surface extends Canvas {
 	private int ultimoMultiploPuntos = 0;
 
 	private Image fondo;
+	
+	private JFrame frame;
 
 	private Jugador jugador = new Jugador();
 
-	public Surface(int w, int h) {
+	public Surface(int w, int h, JFrame frame) {
+		this.frame=frame;
 		setPreferredSize(new Dimension(w, h));
 		setBackground(Color.BLACK);
 		fondo = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/objetos/fondo.png"));
@@ -207,26 +215,47 @@ public class Surface extends Canvas {
 	}
 
 	private void next(long lapse) {
-		if (gameOver)
-			return;
-		ArrayList<Ball> toRemove = new ArrayList<>();
-		for (Ball ball : balls) {
-			ball.move(lapse);
-			ball.updateColor();
-			if (!ball.isActive()) {
-				toRemove.add(ball);
-				continue;
-			}
+	    if (gameOver)
+	        return;
 
-			// Si colisiona con el jugador, termina el juego o penaliza
-			if (jugador.colisionaCon(ball)) {
-				System.out.println("¡Colisión!");
-				gameOver = true;
-				return; // sal del bucle
-			}
-		}
-		balls.removeAll(toRemove);
+	    ArrayList<Ball> toRemove = new ArrayList<>();
+	    for (Ball ball : balls) {
+	        ball.move(lapse);
+	        ball.updateColor();
+	        if (!ball.isActive()) {
+	            toRemove.add(ball);
+	            continue;
+	        }
+
+	        // Si colisiona con el jugador, termina el juego o penaliza
+	        if (jugador.colisionaCon(ball)) {
+	            System.out.println("¡Colisión!");
+	            gameOver = true;
+
+	         // Cuando se detecta que el jugador ha perdido
+	            SwingUtilities.invokeLater(() -> {
+	                frame.dispose(); // cerrar ventana fullscreen del juego
+
+	                String mejorJugador = Ranking.obtenerMejorJugador();
+	                int mejorPuntuacion = Ranking.obtenerMejorPuntuacion();
+
+	                new ventanaFinal(puntos, mejorJugador, mejorPuntuacion);
+	            });
+
+
+
+
+	            return;
+	        }
+	    }
+	    balls.removeAll(toRemove);
 	}
+	
+	public int getPuntos() {
+	    return puntos;
+	}
+
+
 
 	private void drawFrame() {
 		Graphics2D g = null;
