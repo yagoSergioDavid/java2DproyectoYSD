@@ -1,4 +1,4 @@
-package objetos;
+package objetosJuego;
 
 import javax.swing.SwingUtilities;
 

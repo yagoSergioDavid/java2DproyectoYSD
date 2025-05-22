@@ -1,4 +1,4 @@
-package objetos;
+package objetosJuego;
 
 import java.awt.Canvas;
 import java.awt.Color;
@@ -19,6 +19,7 @@ import javax.swing.SwingUtilities;
 import gestsor.Ranking;
 import menu.menuPrincipal;
 import menu.ventanaFinal;
+import sonido.ReproductorMusica;
 
 public class Surface extends Canvas {
 	private static final long serialVersionUID = 1L;
@@ -47,6 +48,7 @@ public class Surface extends Canvas {
 		setPreferredSize(new Dimension(w, h));
 		setBackground(Color.BLACK);
 		fondo = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/objetos/fondo.png"));
+		ReproductorMusica.getInstancia().reproducir("/sonido/juego.wav");
 
 		addKeyListener(new java.awt.event.KeyAdapter() {
 			@Override

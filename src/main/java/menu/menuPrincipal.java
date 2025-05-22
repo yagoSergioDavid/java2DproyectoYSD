@@ -3,7 +3,8 @@ package menu;
 import java.awt.*;
 import javax.swing.*;
 
-import objetos.Surface;
+import objetosJuego.Surface;
+import sonido.ReproductorMusica;
 
 public class menuPrincipal extends JFrame {
 
@@ -12,6 +13,8 @@ public class menuPrincipal extends JFrame {
         setTitle("Cactus Escape");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
+        //ReproducirMusica
+        ReproductorMusica.getInstancia().reproducir("/sonido/menu.wav");
 
         // Panel principal con imagen de fondo
         JPanel panelConFondo = new JPanel() {
@@ -80,6 +83,7 @@ public class menuPrincipal extends JFrame {
             }
 
             juego.start();
+            ReproductorMusica.getInstancia().detener();
             dispose(); // cerrar menú
         });
 
@@ -103,7 +107,6 @@ public class menuPrincipal extends JFrame {
             setBorderPainted(false);
             setBorder(null);
             setOpaque(false);
-
             setFont(new Font("Arial", Font.BOLD, 24));
             setForeground(Color.WHITE);
             setBackground(new Color(0, 230, 118)); // Verde menta
@@ -113,19 +116,19 @@ public class menuPrincipal extends JFrame {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            // Fondo redondeado
             g2.setColor(getBackground());
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), 40, 40);
-
-            // Texto centrado
             FontMetrics fm = g2.getFontMetrics();
             int textWidth = fm.stringWidth(getText());
             int textHeight = fm.getAscent();
             g2.setColor(getForeground());
             g2.drawString(getText(), (getWidth() - textWidth) / 2, (getHeight() + textHeight) / 2 - 4);
-
             g2.dispose();
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(250, 50);
         }
     }
 }
