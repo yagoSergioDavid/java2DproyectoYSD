@@ -30,7 +30,7 @@ import sonido.ReproductorMusica;
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             //Reproducir musica
             ReproductorMusica.getInstancia().reproducirEfecto("/sonidos/risa.wav");
-            ReproductorMusica.getInstancia().reproducir("/sonido/final.wav");
+            ReproductorMusica.getInstancia().reproducir("/sonido/menu.wav");
 
 
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();

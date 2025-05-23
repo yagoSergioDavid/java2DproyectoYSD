@@ -38,7 +38,7 @@ public class Ball {
         color = new Color(1.0f, 0.0f, 0.0f, 1.0f);
 
         try {
-            meteoroImg = ImageIO.read(getClass().getResource("/objetos/meteoro.png"));
+            meteoroImg = ImageIO.read(getClass().getResource("/objetosJuego/meteoro.png"));
         } catch (IOException | IllegalArgumentException e) {
             System.err.println("No se pudo cargar la imagen meteoro.png");
             e.printStackTrace();

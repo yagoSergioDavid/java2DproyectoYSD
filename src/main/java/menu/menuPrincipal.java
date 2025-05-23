@@ -83,7 +83,7 @@ public class menuPrincipal extends JFrame {
             }
 
             juego.start();
-            ReproductorMusica.getInstancia().detener();
+            
             dispose(); // cerrar menú
         });
 

@@ -47,8 +47,8 @@ public class Surface extends Canvas {
 		this.frame=frame;
 		setPreferredSize(new Dimension(w, h));
 		setBackground(Color.BLACK);
-		fondo = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/objetos/fondo.png"));
-		ReproductorMusica.getInstancia().reproducir("/sonido/juego.wav");
+		fondo = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/objetosJuego/fondo.png"));
+		ReproductorMusica.getInstancia().reproducir("/sonido/menu.wav");
 
 		addKeyListener(new java.awt.event.KeyAdapter() {
 			@Override
@@ -233,22 +233,29 @@ public class Surface extends Canvas {
 	        if (jugador.colisionaCon(ball)) {
 	            System.out.println("¡Colisión!");
 	            gameOver = true;
+	            ReproductorMusica.getInstancia().reproducirEfecto("/sonido/risa.wav");
 
-	         // Cuando se detecta que el jugador ha perdido
-	            SwingUtilities.invokeLater(() -> {
-	                frame.dispose(); // cerrar ventana fullscreen del juego
+	            // Pausa de 2 segundos antes de pasar a la pantalla final
+	            new Thread(() -> {
+	                try {
+	                    Thread.sleep(2000); // espera 2 segundos
+	                } catch (InterruptedException e) {
+	                    e.printStackTrace();
+	                }
 
-	                String mejorJugador = Ranking.obtenerMejorJugador();
-	                int mejorPuntuacion = Ranking.obtenerMejorPuntuacion();
+	                SwingUtilities.invokeLater(() -> {
+	                    frame.dispose(); // cerrar ventana fullscreen del juego
 
-	                new ventanaFinal(puntos, mejorJugador, mejorPuntuacion);
-	            });
+	                    String mejorJugador = Ranking.obtenerMejorJugador();
+	                    int mejorPuntuacion = Ranking.obtenerMejorPuntuacion();
 
-
-
+	                    new ventanaFinal(puntos, mejorJugador, mejorPuntuacion);
+	                });
+	            }).start();
 
 	            return;
 	        }
+
 	    }
 	    balls.removeAll(toRemove);
 	}
@@ -305,8 +312,7 @@ public class Surface extends Canvas {
 			g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 36));
 			g2d.drawString("¡GAME OVER!", getWidth() / 2 - 120, getHeight() / 2);
 			g2d.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 20));
-			g2d.drawString("Pulsa 'R' para reiniciar", getWidth() / 2 - 100, getHeight() / 2 + 30);
-			g2d.drawString("Pulsa 'M' para volver al menu", getWidth() / 2 - 120, getHeight() / 2 + 60);
+			
 		}
 	}
 

@@ -14,7 +14,7 @@ public class Jugador {
 		x = 0;
 		y = 0;
 		try {
-			cactusImage = ImageIO.read(getClass().getResource("/objetos/cactus.png")); // ajusta la ruta si es diferente
+			cactusImage = ImageIO.read(getClass().getResource("/objetosJuego/cactus.png")); // ajusta la ruta si es diferente
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
