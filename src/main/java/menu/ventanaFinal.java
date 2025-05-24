@@ -29,7 +29,7 @@ import sonido.ReproductorMusica;
             setUndecorated(true);
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             //Reproducir musica
-            ReproductorMusica.getInstancia().reproducirEfecto("/sonidos/risa.wav");
+     
             ReproductorMusica.getInstancia().reproducir("/sonido/menu.wav");
 
 
